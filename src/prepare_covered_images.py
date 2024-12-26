@@ -5,8 +5,8 @@ from numpy import asarray
 from mtcnn.mtcnn import MTCNN
 from pathlib import Path
 
-source_images_folder = '../img_align_celeba'
-covered_faces_folder = '../data/covered_faces_arcface'
+source_images_folder = '../data/additional_identities/raw_images'
+covered_faces_folder = '../data//additional_identities/covered_faces'
 identities_file = '../identity_CelebA.txt'
 
 Path(covered_faces_folder).mkdir(parents=True, exist_ok=True)
@@ -75,7 +75,23 @@ def extract_and_cover_faces(number_of_identities):
             except Exception:
                 print(f'could not extract face from image: {filename}')
 
-extract_and_cover_faces(1000)
+def extract_and_cover_additional_faces():
+    for identity in os.listdir(source_images_folder):
+        for image_name in os.listdir(source_images_folder + '/' + identity):
+            if not os.path.isdir(covered_faces_folder + '/' + identity):
+                os.mkdir(covered_faces_folder + '/' + identity)
+            if os.path.isfile(covered_faces_folder + '/' + identity + '/' + image_name):
+                continue
+            try:
+                image_extracted, mtcnn_data = extract_image(source_images_folder + '/' + identity + '/' + image_name)
+                covered_image = cover_face(image_extracted, mtcnn_data)
 
+                covered_image = covered_image.resize((160, 160))
+                covered_image.save(covered_faces_folder + '/' + identity + '/' + image_name)
+                print(f'Image {image_name} successfully extracted for identity: {identity}')
+            except Exception:
+                print(f'could not extract face from image: {image_name}')
+
+extract_and_cover_additional_faces()
 
 

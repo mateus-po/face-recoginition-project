@@ -7,8 +7,11 @@ import pickle
 from random import randint, shuffle
 from sklearn.decomposition import PCA
 
-embeddings_by_identity_outfile = '../data/embeddings_by_identity_arcface_outfile.pkl'
-facenet_SVM_classificator_outfile = '../data/arcface_SVM_classificator_outfile.pkl'
+embeddings_by_identity_outfile = '../data/embeddings_by_identity_outfile.pkl'
+facenet_SVM_classificator_outfile = '../data/facenet_SVM_classificator_outfile.pkl'
+facenet_PCA_outfile = '../data/facenet_PCA_outfile.pkl'
+facenet_embeddings_normalizer_outfile = '../data/facenet_embeddings_normalizer_outfile.pkl'
+facenet_label_decoder_outfile = '../data/facenet_label_decoder_outfile.pkl'
 
 
 def prepare_train_test_data(embeddings_by_identity_dict, test_sample_ratio):
@@ -64,39 +67,46 @@ with open(embeddings_by_identity_outfile, "rb") as in_file:
     embeddings_by_identity = pickle.load(in_file)
 
 model = None
+num_of_identities_in_classificator = 100
 
-for size in [10, 20, 30, 50, 100,
-             200, 300, 400, 500, 600, 700, 800, 900, 1000
-             ]:
-    embeddings_by_identity_subset = {k: embeddings_by_identity[k] for k in list(embeddings_by_identity)[:size]}
+embeddings_by_identity_subset = {k: embeddings_by_identity[k] for k in list(embeddings_by_identity)[:num_of_identities_in_classificator]}
 
-    train_X, train_Y, train_images, test_X, test_Y, test_images = prepare_train_test_data(embeddings_by_identity_subset, 0.2)
+train_X, train_Y, train_images, test_X, test_Y, test_images = prepare_train_test_data(embeddings_by_identity_subset, 0.2)
 
-    pca = PCA(.95)
-    pca.fit(train_X)
+pca = PCA(.95)
+pca.fit(train_X)
 
-    in_encode = Normalizer(norm='l2')
-    train_X = in_encode.transform(pca.transform(train_X))
-    test_X = in_encode.transform(pca.transform(test_X))
+in_encode = Normalizer(norm='l2')
+train_X = in_encode.transform(pca.transform(train_X))
+test_X = in_encode.transform(pca.transform(test_X))
 
-    out_encode = LabelEncoder()
-    out_encode.fit(train_Y)
-    train_Y = out_encode.transform(train_Y)
-    test_Y = out_encode.transform(test_Y)
+out_encode = LabelEncoder()
+out_encode.fit(train_Y)
+train_Y = out_encode.transform(train_Y)
+test_Y = out_encode.transform(test_Y)
 
-    grid = SVC(kernel='rbf', C=0.7, probability=True)
-    grid.fit(train_X, train_Y)
+model = SVC(kernel='rbf', C=0.7, probability=True)
+model.fit(train_X, train_Y)
 
-    predict_train = grid.predict(train_X)
-    predict_test = grid.predict(test_X)
+predict_train = model.predict(train_X)
+predict_test = model.predict(test_X)
 
-    probability = grid.predict_proba(test_X)
-    confidence = max(probability)
+probability = model.predict_proba(test_X)
+confidence = max(probability)
 
-    acc_train = accuracy_score(train_Y, predict_train)
-    acc_test = accuracy_score(test_Y, predict_test)
+acc_train = accuracy_score(train_Y, predict_train)
+acc_test = accuracy_score(test_Y, predict_test)
 
-    print(f'Number of identities: {size}, Accuracy train: {acc_train}, Accuracy test: {acc_test}, Number of dimestions: {train_X[0].shape[0]}')
+print(f'Number of identities: {num_of_identities_in_classificator}, Accuracy train: {acc_train}, Accuracy test: {acc_test}, Number of dimestions: {train_X[0].shape[0]}')
 
 with open(facenet_SVM_classificator_outfile, "wb") as out_file:
     pickle.dump(model, out_file)
+
+with open(facenet_PCA_outfile, "wb") as out_file:
+    pickle.dump(pca, out_file)
+
+with open(facenet_embeddings_normalizer_outfile, "wb") as out_file:
+    pickle.dump(in_encode, out_file)
+
+with open(facenet_label_decoder_outfile, "wb") as out_file:
+    pickle.dump(out_encode, out_file)
