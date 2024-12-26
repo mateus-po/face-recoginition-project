@@ -1,0 +1,7 @@
+img_align_celeba
+identity_CelebA.txt
+.idea
+extracted_images
+data/covered_faces
+data/covered_faces_arcface
+*.pkl
