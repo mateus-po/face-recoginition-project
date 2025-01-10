@@ -67,7 +67,7 @@ with open(embeddings_by_identity_outfile, "rb") as in_file:
     embeddings_by_identity = pickle.load(in_file)
 
 model = None
-num_of_identities_in_classificator = 100
+num_of_identities_in_classificator = 1000
 
 embeddings_by_identity_subset = {k: embeddings_by_identity[k] for k in list(embeddings_by_identity)[:num_of_identities_in_classificator]}
 

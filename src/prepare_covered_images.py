@@ -6,7 +6,7 @@ from mtcnn.mtcnn import MTCNN
 from pathlib import Path
 
 source_images_folder = '../data/additional_identities/raw_images'
-covered_faces_folder = '../data//additional_identities/covered_faces'
+covered_faces_folder = '../data/additional_identities/covered_faces'
 identities_file = '../identity_CelebA.txt'
 
 Path(covered_faces_folder).mkdir(parents=True, exist_ok=True)
